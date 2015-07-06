@@ -21,14 +21,20 @@ by the value you pass to `data-grasp-template`;
 
 `Grasp.js` uses the same syntax that string templates in ES6 use for interpolation (also the same syntax Ruby uses). There are three steps to creating and rendering a template. The first is to delcare it
 
-`var template = grasp.tempalte('main');`
+```js
+var template = grasp.tempalte('main');
+```
 
 After you declare the template you inject data using the `digest` method.
 The name passed as the first argument will act as a scope for the content,
 so that you can implement multiple scopes in one template (coming soon).
 
-`template.digest('main', content);`
+```js
+template.digest('main', content);
+```
 
 After the data has been processed, you call `render` to actually edit the template bindings
 
-`template.render();`
+```js
+template.render();
+```
