@@ -70,7 +70,8 @@ function Template(name) {
   var slice = Array.prototype.slice;
   var _this = this;
   this.state = {};
-  this.bindings = [];
+  this.name = name;
+  this.bindings = {};
   this.repeatStructures = {};
 
   /* query for all data-grasp-template HTMLElements */
@@ -107,7 +108,9 @@ function Template(name) {
       /* If any exist, iterate and push any new binding declarations to this.binding */
       if (potentialBindings) {
         potentialBindings.forEach(function(bind) {
-          if (_this.bindings.indexOf(bind) === -1) _this.bindings.push(bind);
+          var binding = _this.bindings[bind] = {};
+          binding.element = child;
+
         })
       }
       /* Invoke recursively until no children are avaialble */
@@ -115,6 +118,16 @@ function Template(name) {
       else if (modifier) modifier(parent);
     });
   }
+
+  /**
+   * determines whether an HTMLElement has the data-repeat attribute
+   * which is used to declare the root of repeat templates. If it does
+   * split the declared value. The first part should be the data source
+   * in the state of the template, and the second the identifier for each
+   * element in the series
+   * @param  {HTMLElement} element
+   * @private
+   */
 
   function parseRepeatStructure(element) {
     if (!element.hasAttribute('data-repeat')) return;
@@ -128,45 +141,29 @@ function Template(name) {
     }
   }
 
-console.log(this.repeatStructures);
-
 }
 
 Template.prototype.digest = function digest(name, data) {
 
+  var _this = this;
+
   if (!this._templateRoot) throw new Error('Digest called on unbound template');
 
-  var constructedTemplates = [];
-  var constructedHTMLElements = [];
+  digestBindings(data);
 
-  data.forEach(function(item) {
+  function digestBindings(obj) {
+    console.log(obj);
+    var keys = Object.keys(obj);
+    keys.forEach(function(key) {
 
-    item.bindings = {};
-    var container = document.createElement('tr');
-    item.construct = templateString;
-
-    Object.keys(item).forEach(function(key) {
-      if (key === 'bindings') return;
-      var binding = '#{' + key + '}';
-      item.construct = item.construct.replace(binding, item[key]);
-    });
-
-    container.innerHTML = item.construct;
-    var constructedHTML = container.firstChild;
-
-    if (typeof template === 'object' && template.classes) {
-      template.classes.forEach(function(CSSClass) {
-        constructedHTML.classList.add(CSSClass);
-      })
-    }
-
-    constructedHTMLElements.push(constructedHTML);
-
-  });
-
-  console.log(constructedHTMLElements)
-  return constructedHTMLElements;
-
+      var bind = '#{' + key + '}';
+      console.log(bind);
+      if (_this.bindings[bind]) {
+        var binding = _this.bindings[bind];
+        binding.value = data[key];
+      }
+    })
+  }
 };
 
 
@@ -178,7 +175,13 @@ Template.prototype.digest = function digest(name, data) {
  */
 Template.prototype.render = function render() {
 
+  var _this = this;
+
+  /* Wait until the DOM is loaded to begin client-side templating */
+  document.addEventListener('DOMContentLoaded', function() {
+    Object.keys(_this.bindings).forEach(function(key) {
+      var binding = _this.bindings[key];
+      binding.element.innerText = binding.value;
+    })
+  })
 };
-
-
-var temp = new Template('users');
