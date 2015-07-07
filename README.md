@@ -30,6 +30,7 @@ The name passed as the first argument will act as a scope for the content,
 so that you can implement multiple scopes in one template (coming soon).
 
 ```js
+var content = {title: "The time is: " + new Date()}
 template.digest('main', content);
 ```
 
