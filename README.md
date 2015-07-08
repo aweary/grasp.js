@@ -39,3 +39,21 @@ After the data has been processed, you call `render` to actually edit the templa
 ```js
 template.render();
 ```
+
+### Repeats
+
+`Grasp.js` can iterate through a Javascript model and build up a repatitive DOM structure based on your model, much like Angular's `ng-repeat` feature. If a property passed to `template.digest()` is an array it will be treated as a repeat structure. You use `data-repeat` to declare a repeat within a `data-grasp-template`. Below is an example.
+
+```html
+  <div data-grasp-template='main'>
+    <h1 class='greeting'> Welcome, #{user}!</h1>
+    <h3> Here are your tasks for today <h3>
+    <ul class='task-list'>
+      <li data-repeat='task in tasks'>
+        <h4> #{task.title} </h4>
+        <p> #{task.description} </p>
+      </li>
+    </ul>
+```
+
+You declare `data-repeat` on the HTMLElement you want to repeat, not on it's parent. The above example would iterate through all the objects in the array `tasks`. When iterating over an array of objects you use the `item in items` format in the data-repeat declaration, where `items` is the array and `item` is any identifier you'd like to use to represent the object itself.
