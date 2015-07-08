@@ -11,6 +11,7 @@
     "babelify": "^6.1.2",
     "browserify": "^10.2.4",
     "gulp": "^3.9.0",
+    "gulp-rename": "^1.2.2",
     "gulp-run": "^1.6.8",
     "gulp-shell": "^0.4.2",
     "gulp-uglify": "^1.2.0",

@@ -13,13 +13,20 @@
  */
 
 function Template(name) {
-
+  /* Helper methods and name declaration */
   var slice = Array.prototype.slice;
   var _this = this;
-  this.state = {};
   this.name = name;
-  this.bindings = {};
-  this.repeatStructures = {};
+
+  /* Raw undigested data */
+  this.data = {};
+
+  /* Digested data ready to be bound */
+  this.digests = {};
+  this.digests.repeats = {};
+
+  /* Bindings ready to be rendered */
+  this.bindings = [];
 
   /* query for all data-grasp-template HTMLElements */
   var templates = slice.call(document.querySelectorAll('[data-grasp-template]'), 0);
@@ -31,7 +38,7 @@ function Template(name) {
   }
 
   if (!this._templateRoot) throw new Error('No template found for ' + name);
-  walkTemplateTree(this._templateRoot, parseRepeatStructure);
+  walkTemplateTree(this._templateRoot);
 
 
   /**
@@ -39,53 +46,47 @@ function Template(name) {
    * and parsing out any potential bindings. It will build a list of all
    * the declared template bindings by matching the #{} syntax.
    *
+   * If an element uses the data-repeat attribute, it will be parsed
+   * differently. It will be removed from the DOM and saved in the template
+   * property of the repeatStructure. This will then be used with cloneNode
+   * to map an Array of data to the corresponding HTMLElements
+   *
    * That list is then used when digesting the template data, so it knows which
    * properties are going to need to be digested. It does this using recursion
    *
    * @param  {HTMLElement} parent the root HTMLElement for the tempalate
    * @private
    */
-  function walkTemplateTree(parent, modifier) {
+  function walkTemplateTree(parent) {
 
     var children = slice.call(parent.children, 0);
+    if (!children.length) return;
+
     children.forEach(function(child) {
-      if (modifier) modifier(child);
+
+      if (child.hasAttribute('data-repeat')) {
+        var repeat = child.getAttribute('data-repeat').split(' as ');
+        var source = repeat[0];
+        var digest = _this.digests.repeats[source] = {};
+        digest.parent = child.parentNode;
+        digest.template = child.parentNode.removeChild(child);
+        digest.indentifier = repeat[1];
+        return;
+      };
+
       /* Match all template strings for the child elements */
-      var potentialBindings = child.innerText.match(/#{[\w]+}/gim);
+      var potentialBindings = child.innerText.match(/#{[\w|\.]+}/gim);
       /* If any exist, iterate and push any new binding declarations to this.binding */
       if (potentialBindings) {
         potentialBindings.forEach(function(bind) {
-          var binding = _this.bindings[bind] = {};
-          binding.element = child;
-
+          var bind = bind.replace(/\W/gim, '');
+          var digest = _this.digests[bind] = {};
+          digest.element = child;
         })
       }
       /* Invoke recursively until no children are avaialble */
       if (child.children) walkTemplateTree(child);
-      else if (modifier) modifier(parent);
     });
-  }
-
-  /**
-   * determines whether an HTMLElement has the data-repeat attribute
-   * which is used to declare the root of repeat templates. If it does
-   * split the declared value. The first part should be the data source
-   * in the state of the template, and the second the identifier for each
-   * element in the series
-   * @param  {HTMLElement} element
-   * @private
-   */
-
-  function parseRepeatStructure(element) {
-    if (!element.hasAttribute('data-repeat')) return;
-    var repeat = element.getAttribute('data-repeat').split(' as ');
-    var source = repeat[0];
-    var identifier = repeat[1];
-    _this.repeatStructures[source] = {
-      identifier: identifier,
-      root: element,
-      template: element.children
-    }
   }
 
 }
@@ -102,31 +103,44 @@ function Template(name) {
  * you use #{name} in a template, the corresponding property must be
  * called name).
  *
- * @param  {String} name scope for template data
  * @param  {Array|Object} data template content
  */
-Template.prototype.digest = function digest(name, data) {
+Template.prototype.digest = function digest(data) {
 
   var _this = this;
-
   if (!this._templateRoot) throw new Error('Digest called on unbound template');
-
-  digestBindings(data);
-
-  function digestBindings(obj) {
-    console.log(obj);
-    var keys = Object.keys(obj);
-    keys.forEach(function(key) {
-
-      var bind = '#{' + key + '}';
-      console.log(bind);
-      if (_this.bindings[bind]) {
-        var binding = _this.bindings[bind];
-        binding.value = data[key];
+  /* Localize the digests from the template init */
+  var digests = this.digests;
+  var repeats = digests.repeats;
+  /* Match the data against the digests, handle repeats */
+  Object.keys(data).forEach(function(key) {
+      /* Pass the repeats object to the helper function for repeat data */
+      if (repeats[key]) {
+        digestRepeatData(data[key], repeats[key]);
+        return;
       }
+
+    })
+
+  function digestRepeatData(data, repeat) {
+
+    var parent = repeat.parent;
+    var indentifier = repeat.indentifier;
+
+    data.forEach(function(item) {
+      var props = Object.keys(item).map(function(prop) {
+        var binding = '#{' + indentifier + '.' + prop + '}';
+        var node = repeat.template.cloneNode(true);
+        var value = item[prop];
+        parent.appendChild(node);
+        _this.bindings.push({binding: binding, node: node, value: value});
+      });
+
     })
   }
-};
+}
+
+
 
 
 /**
@@ -141,9 +155,10 @@ Template.prototype.render = function render() {
 
   /* Wait until the DOM is loaded to begin client-side templating */
   document.addEventListener('DOMContentLoaded', function() {
-    Object.keys(_this.bindings).forEach(function(key) {
-      var binding = _this.bindings[key];
-      binding.element.innerText = binding.value;
+    _this.bindings.forEach(function(binding) {
+      var text = binding.node.innerText;
+      console.log(binding);
     })
   })
+
 };

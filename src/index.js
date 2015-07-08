@@ -6,4 +6,5 @@ var grasp = function(element) {
 
 grasp.template = function(name) {
   return new Template(name);
+
 }
