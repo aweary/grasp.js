@@ -63,13 +63,15 @@ function Template(name) {
     if (!children.length) return;
 
     children.forEach(function(child) {
-
+      /* This needs to iterate through the child's children
+         and find the correpsonding DOM element for the binding */
       if (child.hasAttribute('data-repeat')) {
         var repeat = child.getAttribute('data-repeat').split(' as ');
         var source = repeat[0];
         var digest = _this.digests.repeats[source] = {};
         digest.parent = child.parentNode;
-        digest.template = child.parentNode.removeChild(child);
+        var template = child.parentNode.removeChild(child)
+        digest.template = parseRepeatBindings(digest, template);
         digest.indentifier = repeat[1];
         return;
       };
@@ -87,6 +89,20 @@ function Template(name) {
       /* Invoke recursively until no children are avaialble */
       if (child.children) walkTemplateTree(child);
     });
+  }
+
+
+  function parseRepeatBindings(digest, element) {
+    var children = slice.call(element.children, 0);
+    children.forEach(function(child) {
+      var potentialBindings = child.innerText.match(/#{[\w|\.]+}/gim);
+      potentialBindings.forEach(function(bind) {
+        digest[bind] = {}
+        digest[bind].element = child;
+        digest[bind].parent = child.parentNode;
+        digest[bind].text = child.innerText;
+      })
+    })
   }
 
 }
@@ -120,20 +136,42 @@ Template.prototype.digest = function digest(data) {
         return;
       }
 
+      var digest = digests[key];
+      var element = digest.element;
+      var binding = '#{' + key + '}';
+      element.innerText = element.innerText.replace(binding, data[key]);
+
     })
 
   function digestRepeatData(data, repeat) {
 
     var parent = repeat.parent;
     var indentifier = repeat.indentifier;
+    var templateParent;
+    var repeats = []
 
     data.forEach(function(item) {
-      var props = Object.keys(item).map(function(prop) {
+
+      /* Create an instance of the repeat parent */
+
+      var props = Object.keys(item);
+      props.forEach(function(prop) {
+
         var binding = '#{' + indentifier + '.' + prop + '}';
-        var node = repeat.template.cloneNode(true);
+        var template = repeat[binding];
         var value = item[prop];
-        parent.appendChild(node);
-        _this.bindings.push({binding: binding, node: node, value: value});
+
+
+        if (!templateParent) templateParent = template.parent.cloneNode();
+        var tempElement = template.element.cloneNode();
+        tempElement.innerText = template.text.replace(binding, value);
+        templateParent.appendChild(tempElement);
+
+        /* Reset templateParent for every data property */
+        if (props.indexOf(prop) === props.length - 1) {
+          parent.appendChild(templateParent);
+          templateParent = null;
+        }
       });
 
     })
