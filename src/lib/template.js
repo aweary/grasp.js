@@ -7,6 +7,8 @@
  * It then walks the template tree and finds any bindings. These are then
  * cached on the template object itself so it will know what values are being
  * bound when it is digested and rendered.
+ *
+ *
  * @param {String} name the value passed to data-grasp-template
  * @constructor
  * @private
@@ -160,7 +162,6 @@ Template.prototype.digest = function digest(data) {
         var binding = '#{' + indentifier + '.' + prop + '}';
         var template = repeat[binding];
         var value = item[prop];
-
 
         if (!templateParent) templateParent = template.parent.cloneNode();
         var tempElement = template.element.cloneNode();
