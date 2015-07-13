@@ -84,15 +84,22 @@ function Template(name) {
       if (potentialBindings) {
         potentialBindings.forEach(function(bind) {
           var bind = bind.replace(/\W/gim, '');
-          var digest = _this.digests[bind] = {};
-          digest.element = child;
+          if (_this.digests[bind]) {
+            var elements = _this.digests[bind].elements;
+            if (elements.indexOf(child) === -1) elements.push(child);
+          }
+          else {
+            var digest = _this.digests[bind] = {};
+            digest.elements = [];
+            digest.elements.push(child);
+          }
         })
       }
       /* Invoke recursively until no children are avaialble */
       if (child.children) walkTemplateTree(child);
     });
-  }
 
+  }
 
   function parseRepeatBindings(digest, element) {
     var children = slice.call(element.children, 0);
@@ -139,9 +146,11 @@ Template.prototype.digest = function digest(data) {
       }
 
       var digest = digests[key];
-      var element = digest.element;
-      var binding = '#{' + key + '}';
-      element.innerText = element.innerText.replace(binding, data[key]);
+      var elements = digest.elements;
+      elements.forEach(function(element) {
+        var binding = '#{' + key + '}';
+        element.innerText = element.innerText.replace(binding, data[key]);
+      })
 
     })
 
