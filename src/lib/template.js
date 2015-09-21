@@ -46,7 +46,7 @@ function Template(name) {
   /**
    * internal function for visiting all dom elements in the template tree
    * and parsing out any potential bindings. It will build a list of all
-   * the declared template bindings by matching the #{} syntax.
+   * the declared template bindings by matching the ${} syntax.
    *
    * If an element uses the data-repeat attribute, it will be parsed
    * differently. It will be removed from the DOM and saved in the template
@@ -79,11 +79,10 @@ function Template(name) {
       };
 
       /* Match all template strings for the child elements */
-      var potentialBindings = child.innerText.match(/#{[\w|\.]+}/gim);
+      var potentialBindings = child.innerText.match(/${[\w|\.]+}/gim);
       /* If any exist, iterate and push any new binding declarations to this.binding */
       if (potentialBindings) {
         potentialBindings.forEach(function(bind) {
-          var bind = bind.replace(/\W/gim, '');
           if (_this.digests[bind]) {
             var elements = _this.digests[bind].elements;
             if (elements.indexOf(child) === -1) elements.push(child);
@@ -104,7 +103,7 @@ function Template(name) {
   function parseRepeatBindings(digest, element) {
     var children = slice.call(element.children, 0);
     children.forEach(function(child) {
-      var potentialBindings = child.innerText.match(/#{[\w|\.]+}/gim);
+      var potentialBindings = child.innerText.match(/${[\w|\.]+}/gim);
       potentialBindings.forEach(function(bind) {
         digest[bind] = {}
         digest[bind].element = child;
@@ -125,7 +124,7 @@ function Template(name) {
  * It iterates through the parsed bindings on the template instance
  * populates any matches with the data passed in. The data properties
  * must match the name of the property in the template bind (i.e., if
- * you use #{name} in a template, the corresponding property must be
+ * you use ${name} in a template, the corresponding property must be
  * called name).
  *
  * @param  {Array|Object} data template content
@@ -148,7 +147,7 @@ Template.prototype.digest = function digest(data) {
       var digest = digests[key];
       var elements = digest.elements;
       elements.forEach(function(element) {
-        var binding = '#{' + key + '}';
+        var binding = '${' + key + '}';
         element.innerText = element.innerText.replace(binding, data[key]);
       })
 
@@ -168,7 +167,7 @@ Template.prototype.digest = function digest(data) {
       var props = Object.keys(item);
       props.forEach(function(prop) {
 
-        var binding = '#{' + indentifier + '.' + prop + '}';
+        var binding = '${' + indentifier + '.' + prop + '}';
         var template = repeat[binding];
         var value = item[prop];
 

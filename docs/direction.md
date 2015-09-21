@@ -13,16 +13,16 @@ Given the following HTML:
   <div data-grasp-template='main' class='container'>
 
     <div class='header'>
-      <h1 class='title'> Welcome to #{title}, on #{date}! </h1>
-      <h3 class='sub-title'> #{subtitle} </h3>
-      <span> #{time} </span>
+      <h1 class='title'> Welcome to ${title}, on ${date}! </h1>
+      <h3 class='sub-title'> ${subtitle} </h3>
+      <span> ${time} </span>
     </div>
 
     <div class='post-container'>
       <div class='post' data-repeat='post in posts'>
-        <h4 class='post-title'> #{post.title} </h4>
-        <p class='post-content'> #{post.content} </p>
-        <span> #{time} </span>
+        <h4 class='post-title'> ${post.title} </h4>
+        <p class='post-content'> ${post.content} </p>
+        <span> ${time} </span>
       </div>
     </div>
 
@@ -44,19 +44,19 @@ We should have the following internal `Grasp.js` state:
       'hash': 0
 
 
-      '#{title}': {
+      '${title}': {
         'elements': [h1.title]
       },
 
-      '#{date}': {
+      '${date}': {
         'elements': [h3.sub-title]
       },
 
-      '#{subtitle}': {
+      '${subtitle}': {
         'elements': [div.sub-title]
       }
 
-      '#{time}': {
+      '${time}': {
         'elements': [span, span]
       }
 
@@ -71,7 +71,7 @@ We should have the following internal `Grasp.js` state:
 
 Each binding is set as a property on an object, which corresponds to the template itself.
 
-Bindings are scoped by the template they are within. This means you cannot use the same bindings for different data within the same template, e.g., #{title} can only be bound once within a template. Future development may implement scoping within templates, but we'll see.
+Bindings are scoped by the template they are within. This means you cannot use the same bindings for different data within the same template, e.g., ${title} can only be bound once within a template. Future development may implement scoping within templates, but we'll see.
 
  This structure will allow us to form potential bindings from the keys of the passed data object(s) and then just use those to access the corresponding `HTMLElement` in the data structure. The binding process will create those potential bindings, check this data structure to see if they are valid, and if so attach the corresponding value to the element.
 
@@ -111,22 +111,22 @@ It would bind the values to the data structure like so:
       'hash': 0,
 
 
-      '#{title}': {
+      '${title}': {
         'elements': [h1.title],
         'value': 'My Test Website'
       },
 
-      '#{date}': {
+      '${date}': {
         'elements': [h3.sub-title],
         'value': 'Thu Jul 09 2015 19:45:30 GMT-0500 (CDT)'
       },
 
-      '#{subtitle}': {
+      '${subtitle}': {
         'elements': [div.sub-title],
         'This is for some tests.'
       }
 
-      '#{time}': {
+      '${time}': {
         'elements': [span, span],
         'value': '1436481950037'
       }

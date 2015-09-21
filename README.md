@@ -15,7 +15,7 @@ by the value you pass to `data-grasp-template`;
 ```html
     <div data-grasp-template='main'>
       <!-- rendered content would appear here -->
-      <h1> #{title} </h1>
+      <h1> ${title} </h1>
     <div>
 ```
 
@@ -46,12 +46,12 @@ template.render();
 
 ```html
   <div data-grasp-template='main'>
-    <h1 class='greeting'> Welcome, #{user}!</h1>
+    <h1 class='greeting'> Welcome, ${user}!</h1>
     <h3> Here are your tasks for today <h3>
     <ul class='task-list'>
       <li data-repeat='task in tasks'>
-        <h4> #{task.title} </h4>
-        <p> #{task.description} </p>
+        <h4> ${task.title} </h4>
+        <p> ${task.description} </p>
       </li>
     </ul>
 ```
